@@ -33,6 +33,6 @@ To keep things organized, the project expects a specific folder structure. We us
 ## Future Plans (To-Do)
 As I continue to work on this, I plan to:
 - [ ] Optimize the code (reduce repetition and use functions).
-
+- [ ] Code and outputs translation to English
 ---
 *Feel free to explore the code, and remember: it's a work in progress!*
