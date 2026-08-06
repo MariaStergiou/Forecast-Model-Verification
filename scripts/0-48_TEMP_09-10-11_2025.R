@@ -22,7 +22,7 @@ TARGET_HOURS <- c(0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48
 
 # Define months and their labels for plot titles
 MONTHS <- c("09", "10", "11")
-MONTH_LABELS <- c("09" = "Σεπ 2025", "10" = "Οκτ 2025", "11" = "Νοε 2025")
+MONTH_LABELS <- c("09" = "Sep 2025", "10" = "Oct 2025", "11" = "Nov 2025")
 
 # START OF THE MAIN LOOP FOR EACH MONTH
 for (mo in MONTHS) {
@@ -111,7 +111,7 @@ for (mo in MONTHS) {
       metrics_ecmwf <- rbind(metrics_ecmwf, data.frame(Hour = i, RMSE = rmse_ecmwf, ME = me_ecmwf))
       
       # Save file with the month indicator into the docs directory
-      doc_filename_ecmwf <- paste0("apotelesma_sygkrisis_temp_", mo, "_ecmwf_", i, ".txt")
+      doc_filename_ecmwf <- paste0("comparison_result_temp_", mo, "_ecmwf_", i, ".txt")
       write.table(final_ecmwf, file = file.path(DIR_DOCS, doc_filename_ecmwf), 
                   sep = "\t", row.names = FALSE, quote = FALSE)
     }
@@ -134,7 +134,7 @@ for (mo in MONTHS) {
       metrics_icon <- rbind(metrics_icon, data.frame(Hour = i, RMSE = rmse_icon, ME = me_icon))
       
       # Save file with the month indicator into the docs directory
-      doc_filename_icon <- paste0("apotelesma_sygkrisis_temp_", mo, "_icon_", i, ".txt")
+      doc_filename_icon <- paste0("comparison_result_temp_", mo, "_icon_", i, ".txt")
       write.table(final_icon, file = file.path(DIR_DOCS, doc_filename_icon), 
                   sep = "\t", row.names = FALSE, quote = FALSE)
     }
@@ -154,10 +154,10 @@ for (mo in MONTHS) {
   ylim_me <- range(c(metrics_ecmwf$ME, metrics_icon$ME), na.rm = TRUE)
   
   # --- TOP ROW: RMSE Plot ---
-  plot_title_rmse <- paste0("Εξέλιξη RMSE Θερμοκρασίας (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
+  plot_title_rmse <- paste0("Temperature (TEMP) RMSE Evolution (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
   
   plot(metrics_ecmwf$Hour, metrics_ecmwf$RMSE, type = "b", col = "red", pch = 16,
-       xlab = "Ώρα Πρόγνωσης (Lead Time)", ylab = "RMSE (°C)", 
+       xlab = "Forecast Hour (Lead Time)", ylab = "RMSE (°C)", 
        main = plot_title_rmse,
        xaxt = "n", 
        xlim = c(0, 48), # Fixed axis 0-48
@@ -171,10 +171,10 @@ for (mo in MONTHS) {
   
   
   # --- BOTTOM ROW: Mean Error (ME) Plot ---
-  plot_title_me <- paste0("Εξέλιξη Mean Error Θερμοκρασίας (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
+  plot_title_me <- paste0("Temperature (TEMP) Mean Error Evolution (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
   
   plot(metrics_ecmwf$Hour, metrics_ecmwf$ME, type = "b", col = "red", pch = 16,
-       xlab = "Ώρα Πρόγνωσης (Lead Time)", ylab = "Mean Error (°C)", 
+       xlab = "Forecast Hour (Lead Time)", ylab = "Mean Error (°C)", 
        main = plot_title_me,
        xaxt = "n", 
        xlim = c(0, 48), # Fixed axis 0-48

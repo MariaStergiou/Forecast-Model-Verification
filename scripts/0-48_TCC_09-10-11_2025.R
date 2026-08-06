@@ -1,36 +1,38 @@
 # ---------------------------------------------------------------------------------
-# 1. ΒΑΣΙΚΕΣ ΡΥΘΜΙΣΕΙΣ (ΩΡΕΣ, ΜΗΝΕΣ ΚΑΙ ΦΑΚΕΛΟΙ)
+# 1. BASIC SETTINGS (HOURS, MONTHS, AND DIRECTORIES)
 # ---------------------------------------------------------------------------------
 
+# Check and install 'here' package if it is missing
+if (!requireNamespace("here", quietly = TRUE)) {
+  install.packages("here")
+}
 library(here)
 
-# Ορισμός των σχετικών διαδρομών (paths) με βάση το φάκελο 'scripts'
+# Define relative paths based on the project root automatically found by here()
 DIR_DATA  <- here("data")
 DIR_DOCS  <- here("output", "docs")
 DIR_PLOTS <- here("output", "plots")
 
-# Automatic folder creation
+# Create output directories if they do not exist
 if (!dir.exists(DIR_DOCS))  dir.create(DIR_DOCS,  recursive = TRUE, showWarnings = FALSE)
 if (!dir.exists(DIR_PLOTS)) dir.create(DIR_PLOTS, recursive = TRUE, showWarnings = FALSE)
 
-# Ώρες πρόγνωσης
 TARGET_HOURS <- c(0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48)
 
-# Ορίζουμε τους μήνες και τις ετικέτες τους για τους τίτλους των γραφημάτων
+# Define months and their labels for plot titles
 MONTHS <- c("09", "10", "11")
-MONTH_LABELS <- c("09" = "Σεπ 2025", "10" = "Οκτ 2025", "11" = "Νοε 2025")
+MONTH_LABELS <- c("09" = "Sep 2025", "10" = "Oct 2025", "11" = "Nov 2025")
 
-# ΕΝΑΡΞΗ ΤΗΣ ΜΕΓΑΛΗΣ ΕΠΑΝΑΛΗΨΗΣ ΓΙΑ ΚΑΘΕ ΜΗΝΑ
+# START OF THE MAIN LOOP FOR EACH MONTH
 for (mo in MONTHS) {
   
   print("######################################################")
-  print(paste("Ξεκινάει η ανάλυση για τον μήνα:", MONTH_LABELS[mo]))
+  print(paste("Starting analysis for month:", MONTH_LABELS[mo]))
   print("######################################################")
   
-  # --- Ανάγνωση αρχείων ανάλογα με τον μήνα (mo) ---
+  # --- Read files depending on the month (mo) ---
   
-  # Στην ανάγνωση των τριών παρακάτω αρχείων, ο κώδικας εντοπίζει 
-  # τις στήλες με βάση τον αριθμό της εκάστοτε στήλης
+  # In reading the three files below, the code identifies columns based on their index
   
   # OBS
   obs_file  <- paste0('TCC_OBS_2025_', mo, '.txt')  
@@ -44,7 +46,7 @@ for (mo in MONTHS) {
   
   obs_cor_full <- data.frame(
     obs_codes         = trimws(obs_table_data[, 2]),
-    obs_dates         = as.Date(trimws(obs_table_data[, 3])), # Μετατροπή σε Date κατευθείαν
+    obs_dates         = as.Date(trimws(obs_table_data[, 3])), # Direct conversion to Date
     obs_tcc_table_h   = as.numeric(obs_table_data[, 5]),
     obs_tcc_table     = as.numeric(obs_table_data[, 7]),
     obs_station_names = trimws(obs_table_data[, 10])
@@ -87,22 +89,22 @@ for (mo in MONTHS) {
   )
   
   # ---------------------------------------------------------------------------------
-  # 2. Η ΕΣΩΤΕΡΙΚΗ ΕΠΑΝΑΛΗΨΗ ΓΙΑ ΤΙΣ ΩΡΕΣ (0-48)
+  # 2. INNER LOOP FOR TARGET HOURS (0-48)
   # ---------------------------------------------------------------------------------
   
-  # Μηδενισμός των πινάκων για τον νέο μήνα
+  # Reset dataframes for the new month
   metrics_ecmwf <- data.frame(Hour = integer(), RMSE = numeric(), ME = numeric())
   metrics_icon  <- data.frame(Hour = integer(), RMSE = numeric(), ME = numeric())
   
   for (i in TARGET_HOURS) {
-    # Πραγματική ώρα παρατήρησης και ημέρες μπροστά
+    # Actual observation hour and days ahead
     obs_h <- i %% 24
     days_ahead <- i %/% 24
     
-    # Φιλτράρισμα παρατηρήσεων
+    # Filter observations
     obs_cor <- obs_cor_full[obs_cor_full$obs_tcc_table_h == obs_h, ]
     
-    # ---------- Υπολογισμοί για ECMWF ----------
+    # ---------- Calculations for ECMWF ----------
     ecmwf_cor <- ecmwf_cor_full[ecmwf_cor_full$ecmwf_tcc_table_h == i, ]
     ecmwf_cor$valid_date <- ecmwf_cor$ecmwf_dates + days_ahead
     
@@ -119,14 +121,14 @@ for (mo in MONTHS) {
       
       metrics_ecmwf <- rbind(metrics_ecmwf, data.frame(Hour = i, RMSE = rmse_ecmwf, ME = me_ecmwf))
       
-      # Αποθήκευση αρχείου με το όνομα του μήνα στον φάκελο docs
-      doc_filename_ecmwf <- paste0("apotelesma_sygkrisis_tcc_", mo, "_ecmwf_", i, ".txt")
+      # Save file with the month indicator into the docs directory
+      doc_filename_ecmwf <- paste0("comparison_result_tcc_", mo, "_ecmwf_", i, ".txt")
       write.table(final_ecmwf, 
                   file = file.path(DIR_DOCS, doc_filename_ecmwf), 
                   sep = "\t", row.names = FALSE, quote = FALSE)
     }
     
-    # ---------- Υπολογισμοί για ICON ----------
+    # ---------- Calculations for ICON ----------
     icon_cor <- icon_cor_full[icon_cor_full$icon_tcc_table_h == i, ]
     icon_cor$valid_date <- icon_cor$icon_dates + days_ahead
     
@@ -143,8 +145,8 @@ for (mo in MONTHS) {
       
       metrics_icon <- rbind(metrics_icon, data.frame(Hour = i, RMSE = rmse_icon, ME = me_icon))
       
-      # Αποθήκευση αρχείου με το όνομα του μήνα στον φάκελο docs
-      doc_filename_icon <- paste0("apotelesma_sygkrisis_tcc_", mo, "_icon_", i, ".txt")
+      # Save file with the month indicator into the docs directory
+      doc_filename_icon <- paste0("comparison_result_tcc_", mo, "_icon_", i, ".txt")
       write.table(final_icon, 
                   file = file.path(DIR_DOCS, doc_filename_icon), 
                   sep = "\t", row.names = FALSE, quote = FALSE)
@@ -152,10 +154,10 @@ for (mo in MONTHS) {
   }
   
   # ---------------------------------------------------------------------------------
-  # 3. ΔΗΜΙΟΥΡΓΙΑ ΚΑΙ ΑΠΟΘΗΚΕΥΣΗ ΓΡΑΦΗΜΑΤΟΣ (ΓΙΑ ΤΟΝ ΣΥΓΚΕΚΡΙΜΕΝΟ ΜΗΝΑ)
+  # 3. CREATE AND SAVE PLOT (FOR THE SPECIFIC MONTH)
   # ---------------------------------------------------------------------------------
   
-  # Το όνομα της εικόνας αλλάζει αυτόματα και σώζεται στον φάκελο plots
+  # Image name changes automatically and is saved in the plots directory
   plot_filename <- paste0("plot_icon_ecmwf_tcc_", mo, "_0_48.png")
   png(filename = file.path(DIR_PLOTS, plot_filename), width = 1200, height = 900, res = 100)
   
@@ -164,11 +166,11 @@ for (mo in MONTHS) {
   ylim_rmse <- range(c(metrics_ecmwf$RMSE, metrics_icon$RMSE), na.rm = TRUE)
   ylim_me   <- range(c(metrics_ecmwf$ME, metrics_icon$ME), na.rm = TRUE)
   
-  # --- ΠΑΝΩ ΣΕΙΡΑ: Γράφημα RMSE ---
-  plot_title_rmse <- paste0("Εξέλιξη RMSE Νεφοκάλυψης (Total Cloud Cover) (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
+  # --- TOP ROW: RMSE Plot ---
+  plot_title_rmse <- paste0("Total Cloud Cover (TCC) RMSE Evolution (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
   
   plot(metrics_ecmwf$Hour, metrics_ecmwf$RMSE, type = "b", col = "red", pch = 16,
-       xlab = "Ώρα Πρόγνωσης (Lead Time)", ylab = "RMSE (%)", 
+       xlab = "Forecast Hour (Lead Time)", ylab = "RMSE (%)", 
        main = plot_title_rmse,
        xaxt = "n", ylim = c(ylim_rmse[1]*0.9, ylim_rmse[2]*1.15)) 
   
@@ -178,11 +180,11 @@ for (mo in MONTHS) {
   legend("topleft", legend = c("IFS ECMWF", "ICON-GR"), col = c("red", "blue"), 
          pch = c(16, 17), lty = 1, bg = "white", cex = 0.75)
   
-  # --- ΚΑΤΩ ΣΕΙΡΑ: Γράφημα Mean Error (ME) ---
-  plot_title_me <- paste0("Εξέλιξη Mean Error Νεφοκάλυψης (Total Cloud Cover) (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
+  # --- BOTTOM ROW: Mean Error (ME) Plot ---
+  plot_title_me <- paste0("Total Cloud Cover (TCC) Mean Error Evolution (0h - 48h) \n(IFS ECMWF - ICON-GR, ", MONTH_LABELS[mo], ")")
   
   plot(metrics_ecmwf$Hour, metrics_ecmwf$ME, type = "b", col = "red", pch = 16,
-       xlab = "Ώρα Πρόγνωσης (Lead Time)", ylab = "Mean Error (%)", 
+       xlab = "Forecast Hour (Lead Time)", ylab = "Mean Error (%)", 
        main = plot_title_me,
        xaxt = "n", ylim = c(ylim_me[1]-2, ylim_me[2]+2))
   
