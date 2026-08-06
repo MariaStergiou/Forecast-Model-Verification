@@ -10,8 +10,8 @@ library(here)
 
 # Define relative paths based on the project root automatically found by here()
 DIR_DATA  <- here("data")
-DIR_DOCS  <- here("output", "docs")
-DIR_PLOTS <- here("output", "plots")
+DIR_DOCS  <- here("output", "WS", "docs")
+DIR_PLOTS <- here("output", "WS", "plots")
 
 # Create output directories if they do not exist
 if (!dir.exists(DIR_DOCS))  dir.create(DIR_DOCS,  recursive = TRUE, showWarnings = FALSE)
